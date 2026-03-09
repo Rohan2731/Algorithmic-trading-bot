@@ -1,0 +1,617 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 43,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "j7GM8AgEhOXg",
+        "outputId": "e0fce7e1-dfcd-487b-a53a-56ef922aa934"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: mplfinance in /usr/local/lib/python3.12/dist-packages (0.12.10b0)\n",
+            "Requirement already satisfied: matplotlib in /usr/local/lib/python3.12/dist-packages (from mplfinance) (3.10.0)\n",
+            "Requirement already satisfied: pandas in /usr/local/lib/python3.12/dist-packages (from mplfinance) (2.2.2)\n",
+            "Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (1.3.3)\n",
+            "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (0.12.1)\n",
+            "Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (4.61.1)\n",
+            "Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (1.4.9)\n",
+            "Requirement already satisfied: numpy>=1.23 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (2.0.2)\n",
+            "Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (26.0)\n",
+            "Requirement already satisfied: pillow>=8 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (11.3.0)\n",
+            "Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (3.3.2)\n",
+            "Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.12/dist-packages (from matplotlib->mplfinance) (2.9.0.post0)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.12/dist-packages (from pandas->mplfinance) (2025.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.12/dist-packages (from pandas->mplfinance) (2025.3)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.7->matplotlib->mplfinance) (1.17.0)\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install mplfinance"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import glob\n",
+        "import mplfinance as mpf\n",
+        "import matplotlib.pyplot as plt"
+      ],
+      "metadata": {
+        "id": "wyYo4ZaahbFG"
+      },
+      "execution_count": 44,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "files = glob.glob(\"EUR-USD_Minute_*.csv\")\n",
+        "\n",
+        "dfs = []\n",
+        "\n",
+        "for file in files:\n",
+        "    df = pd.read_csv(file)\n",
+        "    dfs.append(df)\n",
+        "\n",
+        "merged_df = pd.concat(dfs)\n",
+        "\n",
+        "print(\"Files loaded:\", len(files))\n",
+        "print(\"Total rows:\", len(merged_df))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "RsOm8a5Ghhza",
+        "outputId": "e33a7e64-0906-4849-f810-f3470c99e95f"
+      },
+      "execution_count": 70,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Files loaded: 10\n",
+            "Total rows: 8609\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/tmp/ipykernel_1406/1423631832.py:9: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n",
+            "  merged_df = pd.concat(dfs)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "merged_df[\"UTC\"] = pd.to_datetime(merged_df[\"UTC\"])\n",
+        "\n",
+        "merged_df = merged_df.sort_values(\"UTC\")\n",
+        "\n",
+        "merged_df.set_index(\"UTC\", inplace=True)\n",
+        "\n",
+        "merged_df = merged_df.dropna()\n",
+        "\n",
+        "print(merged_df.head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4v45LAefiuE3",
+        "outputId": "f4e2f5c9-0f4b-4945-f172-f5922d9aa7f7"
+      },
+      "execution_count": 71,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "                              Open     High      Low    Close  Volume\n",
+            "UTC                                                                  \n",
+            "2026-01-01 22:04:00+00:00  1.17387  1.17414  1.17387  1.17414    5.40\n",
+            "2026-01-01 22:05:00+00:00  1.17414  1.17449  1.17414  1.17448    3.42\n",
+            "2026-01-01 22:06:00+00:00  1.17449  1.17454  1.17449  1.17454    2.52\n",
+            "2026-01-01 22:07:00+00:00  1.17455  1.17455  1.17449  1.17449    1.80\n",
+            "2026-01-01 22:08:00+00:00  1.17449  1.17454  1.17449  1.17454    8.64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m = merged_df.copy()\n",
+        "\n",
+        "df_5m = df_1m.resample(\"5min\").agg({\n",
+        "    \"Open\":\"first\",\n",
+        "    \"High\":\"max\",\n",
+        "    \"Low\":\"min\",\n",
+        "    \"Close\":\"last\",\n",
+        "    \"Volume\":\"sum\"\n",
+        "}).dropna()\n",
+        "\n",
+        "df_15m = df_1m.resample(\"15min\").agg({\n",
+        "    \"Open\":\"first\",\n",
+        "    \"High\":\"max\",\n",
+        "    \"Low\":\"min\",\n",
+        "    \"Close\":\"last\",\n",
+        "    \"Volume\":\"sum\"\n",
+        "}).dropna()\n",
+        "\n",
+        "print(\"1m candles:\", len(df_1m))\n",
+        "print(\"5m candles:\", len(df_5m))\n",
+        "print(\"15m candles:\", len(df_15m))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ib5jV6QEjBzY",
+        "outputId": "c07f2d8e-30ca-45b1-8d96-e42ae263fc17"
+      },
+      "execution_count": 72,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "1m candles: 8609\n",
+            "5m candles: 1728\n",
+            "15m candles: 576\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_15m[\"EMA50\"] = df_15m[\"Close\"].ewm(span=50).mean()\n",
+        "df_15m[\"EMA200\"] = df_15m[\"Close\"].ewm(span=200).mean()\n",
+        "\n",
+        "df_15m[\"trend\"] = 0\n",
+        "\n",
+        "df_15m.loc[df_15m[\"EMA50\"] > df_15m[\"EMA200\"], \"trend\"] = 1\n",
+        "df_15m.loc[df_15m[\"EMA50\"] < df_15m[\"EMA200\"], \"trend\"] = -1\n",
+        "\n",
+        "print(df_15m[[\"Close\",\"EMA50\",\"EMA200\",\"trend\"]].head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ko1G4XhYjnh6",
+        "outputId": "d8525a39-03f0-4bd9-ffe8-76f8e4a09c53"
+      },
+      "execution_count": 73,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "                             Close     EMA50    EMA200  trend\n",
+            "UTC                                                          \n",
+            "2026-01-01 22:00:00+00:00  1.17484  1.174840  1.174840      0\n",
+            "2026-01-01 22:15:00+00:00  1.17453  1.174682  1.174684     -1\n",
+            "2026-01-01 22:30:00+00:00  1.17467  1.174678  1.174679     -1\n",
+            "2026-01-01 22:45:00+00:00  1.17466  1.174673  1.174675     -1\n",
+            "2026-01-01 23:00:00+00:00  1.17463  1.174664  1.174665     -1\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"trend_15m\"] = df_15m[\"trend\"].reindex(df_1m.index, method=\"ffill\")\n",
+        "\n",
+        "print(df_1m[[\"Close\",\"trend_15m\"]].head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6_rYevdZj0Tm",
+        "outputId": "cfcd00ee-2f3f-43df-a3f5-06fd3c2d4ca7"
+      },
+      "execution_count": 74,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "                             Close  trend_15m\n",
+            "UTC                                          \n",
+            "2026-01-01 22:04:00+00:00  1.17414          0\n",
+            "2026-01-01 22:05:00+00:00  1.17448          0\n",
+            "2026-01-01 22:06:00+00:00  1.17454          0\n",
+            "2026-01-01 22:07:00+00:00  1.17449          0\n",
+            "2026-01-01 22:08:00+00:00  1.17454          0\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"upper_wick\"] = df_1m[\"High\"] - df_1m[[\"Open\",\"Close\"]].max(axis=1)\n",
+        "\n",
+        "df_1m[\"lower_wick\"] = df_1m[[\"Open\",\"Close\"]].min(axis=1) - df_1m[\"Low\"]\n",
+        "\n",
+        "df_1m[\"range\"] = df_1m[\"High\"] - df_1m[\"Low\"]\n",
+        "\n",
+        "print(df_1m[[\"upper_wick\",\"lower_wick\",\"range\"]].head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "-_ataFYKkWgX",
+        "outputId": "3366028c-c960-454d-9b03-61a55ba52cc3"
+      },
+      "execution_count": 75,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "                           upper_wick  lower_wick    range\n",
+            "UTC                                                       \n",
+            "2026-01-01 22:04:00+00:00     0.00000         0.0  0.00027\n",
+            "2026-01-01 22:05:00+00:00     0.00001         0.0  0.00035\n",
+            "2026-01-01 22:06:00+00:00     0.00000         0.0  0.00005\n",
+            "2026-01-01 22:07:00+00:00     0.00000         0.0  0.00006\n",
+            "2026-01-01 22:08:00+00:00     0.00000         0.0  0.00005\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"bullish_sweep\"] = (\n",
+        "    (df_1m[\"Low\"] < df_1m[\"Low\"].shift(1)) &\n",
+        "    (df_1m[\"Close\"] > df_1m[\"Open\"])\n",
+        ")\n",
+        "\n",
+        "df_1m[\"bearish_sweep\"] = (\n",
+        "    (df_1m[\"High\"] > df_1m[\"High\"].shift(1)) &\n",
+        "    (df_1m[\"Close\"] < df_1m[\"Open\"])\n",
+        ")\n",
+        "\n",
+        "print(\"Bullish sweeps:\", df_1m[\"bullish_sweep\"].sum())\n",
+        "print(\"Bearish sweeps:\", df_1m[\"bearish_sweep\"].sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "-sQtxNMAkuSL",
+        "outputId": "2df1d152-6ad9-4f90-8b77-c839ea05a618"
+      },
+      "execution_count": 76,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Bullish sweeps: 877\n",
+            "Bearish sweeps: 905\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"bullish_signal\"] = (\n",
+        "    df_1m[\"bullish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == 1)\n",
+        ")\n",
+        "\n",
+        "df_1m[\"bearish_signal\"] = (\n",
+        "    df_1m[\"bearish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == -1)\n",
+        ")\n",
+        "\n",
+        "print(\"Buy signals:\", df_1m[\"bullish_signal\"].sum())\n",
+        "print(\"Sell signals:\", df_1m[\"bearish_signal\"].sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "heKQRSa6k7a8",
+        "outputId": "5d1ba603-b250-44ab-9b8f-7838d4862710"
+      },
+      "execution_count": 80,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Buy signals: 143\n",
+            "Sell signals: 738\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "range_mean = df_1m[\"range\"].rolling(20).mean()\n",
+        "\n",
+        "volatility_filter = df_1m[\"range\"] > range_mean\n",
+        "\n",
+        "df_1m[\"bullish_signal\"] = (\n",
+        "    df_1m[\"bullish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == 1) &\n",
+        "    volatility_filter\n",
+        ")\n",
+        "\n",
+        "df_1m[\"bearish_signal\"] = (\n",
+        "    df_1m[\"bearish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == -1)\n",
+        "    volatility_filter\n",
+        ")\n",
+        "\n",
+        "print(\"Filtered Buy signals:\", df_1m[\"bullish_signal\"].sum())\n",
+        "print(\"Filtered Sell signals:\", df_1m[\"bearish_signal\"].sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 106
+        },
+        "id": "w64hjRRUliIL",
+        "outputId": "b9c27ac5-64f6-4fea-c4a2-babb0fa02198"
+      },
+      "execution_count": 81,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "SyntaxError",
+          "evalue": "invalid syntax. Perhaps you forgot a comma? (2536667917.py, line 12)",
+          "traceback": [
+            "\u001b[0;36m  File \u001b[0;32m\"/tmp/ipykernel_1406/2536667917.py\"\u001b[0;36m, line \u001b[0;32m12\u001b[0m\n\u001b[0;31m    df_1m[\"bearish_sweep\"] &\u001b[0m\n\u001b[0m    ^\u001b[0m\n\u001b[0;31mSyntaxError\u001b[0m\u001b[0;31m:\u001b[0m invalid syntax. Perhaps you forgot a comma?\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_5m[\"EMA20\"] = df_5m[\"Close\"].ewm(span=20).mean()\n",
+        "\n",
+        "df_5m[\"pullback\"] = df_5m[\"Close\"] < df_5m[\"EMA20\"]\n",
+        "\n",
+        "df_1m[\"pullback_5m\"] = df_5m[\"pullback\"].reindex(df_1m.index, method=\"ffill\")\n",
+        "\n",
+        "print(df_1m[\"pullback_5m\"].head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "r6HepKkqnLQo",
+        "outputId": "6f4e2226-d9fb-45b9-e216-ec4939c45c6b"
+      },
+      "execution_count": 82,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "UTC\n",
+            "2026-01-01 22:04:00+00:00    False\n",
+            "2026-01-01 22:05:00+00:00    False\n",
+            "2026-01-01 22:06:00+00:00    False\n",
+            "2026-01-01 22:07:00+00:00    False\n",
+            "2026-01-01 22:08:00+00:00    False\n",
+            "Name: pullback_5m, dtype: bool\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"bullish_signal\"] = (\n",
+        "    df_1m[\"bullish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == 1) &\n",
+        "    (df_1m[\"pullback_5m\"] == True)\n",
+        ")\n",
+        "\n",
+        "df_1m[\"bearish_signal\"] = (\n",
+        "    df_1m[\"bearish_sweep\"] &\n",
+        "    (df_1m[\"trend_15m\"] == -1) &\n",
+        "    (df_1m[\"pullback_5m\"] == True)\n",
+        ")\n",
+        "\n",
+        "print(\"Buy signals:\", df_1m[\"bullish_signal\"].sum())\n",
+        "print(\"Sell signals:\", df_1m[\"bearish_signal\"].sum())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "gwsUdhcdnTfK",
+        "outputId": "c34c247d-b95c-4d5a-db7b-951ac68658ea"
+      },
+      "execution_count": 83,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Buy signals: 80\n",
+            "Sell signals: 432\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df_1m[\"entry_price\"] = np.nan\n",
+        "\n",
+        "df_1m.loc[df_1m[\"bullish_signal\"], \"entry_price\"] = (\n",
+        "    df_1m[\"Low\"] + (df_1m[\"Close\"] - df_1m[\"Low\"]) * 0.5\n",
+        ")\n",
+        "\n",
+        "df_1m.loc[df_1m[\"bearish_signal\"], \"entry_price\"] = (\n",
+        "    df_1m[\"High\"] - (df_1m[\"High\"] - df_1m[\"Close\"]) * 0.5\n",
+        ")\n",
+        "\n",
+        "print(df_1m[\"entry_price\"].dropna().head())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "rxT1N7CRoNA4",
+        "outputId": "081a603e-224e-4f68-8337-e04720a4b551"
+      },
+      "execution_count": 84,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "UTC\n",
+            "2026-01-01 23:10:00+00:00    1.174795\n",
+            "2026-01-01 23:26:00+00:00    1.174870\n",
+            "2026-01-01 23:28:00+00:00    1.174765\n",
+            "2026-02-01 02:38:00+00:00    1.175940\n",
+            "2026-02-01 02:55:00+00:00    1.175835\n",
+            "Name: entry_price, dtype: float64\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "trades = []\n",
+        "for i in range(10, len(df_1m)-50):\n",
+        "\n",
+        "    row = df_1m.iloc[i]\n",
+        "\n",
+        "    entry = row[\"entry_price\"]\n",
+        "\n",
+        "    if pd.notna(entry):\n",
+        "\n",
+        "        if row[\"bullish_signal\"]:\n",
+        "\n",
+        "            stop = row[\"Low\"]\n",
+        "            target = entry + 3*(entry-stop)\n",
+        "\n",
+        "            future = df_1m.iloc[i+1:i+50]\n",
+        "\n",
+        "            for j in range(len(future)):\n",
+        "\n",
+        "                if future[\"Low\"].iloc[j] <= stop:\n",
+        "                    trades.append(-1)\n",
+        "                    break\n",
+        "\n",
+        "                if future[\"High\"].iloc[j] >= target:\n",
+        "                    trades.append(3)\n",
+        "                    break\n",
+        "\n",
+        "\n",
+        "        if row[\"bearish_signal\"]:\n",
+        "\n",
+        "            stop = row[\"High\"]\n",
+        "            target = entry - 3*(stop-entry)\n",
+        "\n",
+        "            future = df_1m.iloc[i+1:i+50]\n",
+        "\n",
+        "            for j in range(len(future)):\n",
+        "\n",
+        "                if future[\"High\"].iloc[j] >= stop:\n",
+        "                    trades.append(-1)\n",
+        "                    break\n",
+        "\n",
+        "                if future[\"Low\"].iloc[j] <= target:\n",
+        "                    trades.append(3)\n",
+        "                    break"
+      ],
+      "metadata": {
+        "id": "IXoYacxjoZWZ"
+      },
+      "execution_count": 85,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import numpy as np\n",
+        "\n",
+        "trades = np.array(trades)\n",
+        "\n",
+        "wins = (trades == 3).sum()\n",
+        "losses = (trades == -1).sum()\n",
+        "\n",
+        "total_trades = len(trades)\n",
+        "\n",
+        "winrate = wins / total_trades * 100\n",
+        "expectancy = np.mean(trades)\n",
+        "\n",
+        "print(\"Total trades:\", total_trades)\n",
+        "print(\"Wins:\", wins)\n",
+        "print(\"Losses:\", losses)\n",
+        "print(\"Winrate:\", winrate)\n",
+        "print(\"Expectancy:\", expectancy)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Xh8MZ_4Losx6",
+        "outputId": "e7c02b10-c025-40c7-d05a-ed8e3109e75e"
+      },
+      "execution_count": 90,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Total trades: 508\n",
+            "Wins: 253\n",
+            "Losses: 255\n",
+            "Winrate: 49.803149606299215\n",
+            "Expectancy: 0.9921259842519685\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
